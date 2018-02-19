@@ -1,0 +1,26 @@
+server:
+  image: fpfeng/shadowsocksr-server
+  ports:
+    - "8080:1234/tcp"
+    - "8080:1234/udp"
+  environment:
+    - PROTOCOL=auth_chain_a
+    - METHOD=none
+    - PASSWORD=mustchangepassword!
+    - OPTIONS=-v
+  restart: always
+
+client:
+  image: fpfeng/shadowsocksr-client
+  ports:
+    - "9090:5678/tcp"
+    - "9090:5678/udp"
+  environment:
+    - LOCAL_ADDR=0.0.0.0
+    - SERVER_ADDR=1.2.3.4
+    - SERVER_PORT=8080
+    - PROTOCOL=auth_chain_a
+    - METHOD=none
+    - PASSWORD=mustchangepassword!
+    - OPTIONS=-v -u
+  restart: always

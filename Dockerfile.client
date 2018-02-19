@@ -1,0 +1,62 @@
+# Dockerfile for shadowsocksrr-libev client at develop branch
+
+FROM alpine
+
+ENV SERVER_ADDR     127.0.0.1
+ENV SERVER_PORT     1234
+ENV LOCAL_ADDR      0.0.0.0
+ENV PASSWORD        mustchangepassword!
+ENV METHOD              none
+ENV PROTOCOL        auth_chain_a
+ENV OBFS            tls1.2_ticket_auth
+ENV TIMEOUT         60
+ENV SS_URL https://github.com/shadowsocksrr/shadowsocksr-libev/archive/Akkariiin/develop.tar.gz
+ENV SS_DIR shadowsocksr-libev-Akkariiin-develop
+
+RUN set -ex \
+    && apk add --no-cache c-ares \
+                          libcrypto1.0 \
+                          libev \
+                          libsodium \
+                          mbedtls \
+                          pcre \
+    && apk add --no-cache \
+               --virtual TMP autoconf \
+                             automake \
+                             build-base \
+                             c-ares-dev \
+                             curl \
+                             gettext-dev \
+                             libev-dev \
+                             libsodium-dev \
+                             libtool \
+                             linux-headers \
+                             mbedtls-dev \
+                             openssl-dev \
+                             pcre-dev \
+                             tar \
+    && rm -rf /var/cache/apk/* \
+    && curl -sSL $SS_URL | tar xz \
+    && cd $SS_DIR \
+        && ./autogen.sh \
+        && ./configure --disable-documentation \
+        && make install \
+        && cd .. \
+        && rm -rf $SS_DIR \
+    && apk del TMP \
+    && rm -rf /var/cache/apk/*
+
+EXPOSE 5678/tcp
+EXPOSE 5678/udp
+
+CMD ss-local -s "$SERVER_ADDR" \
+            -p "$SERVER_PORT" \
+            -b "$LOCAL_ADDR" \
+            -l 5678 \
+            -O "$PROTOCOL" \
+            -o "$OBFS" \
+            -k "$PASSWORD" \
+            -m "$METHOD" \
+            -t "$TIMEOUT" \
+            --fast-open \
+            $OPTIONS
